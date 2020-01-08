@@ -7,3 +7,4 @@ mbtileserver
 *.pem
 .certs/*
 vendor/
+go.sum
