@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
+	"github.com/labstack/echo/v4"
 	"os/exec"
 	"os/signal"
 	"strconv"
@@ -31,6 +32,7 @@ import (
 var (
 	tilesets    map[string]mbtiles.DB
 	startuptime = time.Now()
+	watcher     *fsnotify.Watcher
 )
 
 var rootCmd = &cobra.Command{
