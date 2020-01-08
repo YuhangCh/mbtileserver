@@ -148,6 +148,14 @@ func main() {
 	}
 }
 
+func watchDir(path string, fi os.FileInfo, err error) error {
+	if fi.Mode().IsDir() {
+		return watcher.Add(path)
+	}
+
+	return nil
+}
+
 func serve() {
 	if verbose {
 		log.SetLevel(log.DebugLevel)
