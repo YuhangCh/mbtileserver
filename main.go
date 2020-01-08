@@ -32,7 +32,7 @@ import (
 var (
 	tilesets    map[string]mbtiles.DB
 	startuptime = time.Now()
-	watcher     *fsnotify.Watcher
+	fs          *fsnotify.Watcher
 )
 
 var rootCmd = &cobra.Command{
@@ -150,7 +150,7 @@ func main() {
 
 func watchDir(path string, fi os.FileInfo, err error) error {
 	if fi.Mode().IsDir() {
-		return watcher.Add(path)
+		return fs.Add(path)
 	}
 
 	return nil
