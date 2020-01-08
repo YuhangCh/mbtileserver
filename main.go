@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	"os/exec"
 	"os/signal"
 	"strconv"
@@ -402,6 +403,28 @@ func supervise() {
 	hup := make(chan os.Signal, 1)
 	signal.Notify(hup, syscall.SIGHUP)
 
+	fs, _ = fsnotify.NewWatcher()
+	defer fs.Close()
+
+	if err := filepath.Walk(tilePath, watchDir); err != nil {
+		fmt.Println("ERROR", err)
+	}
+
+	go func() {
+		for {
+			select {
+			case event := <-fs.Events:
+				if strings.HasSuffix(event.Name, ".mbtiles") &&
+					(event.Op == fsnotify.Create || event.Op == fsnotify.Remove) {
+					hup <- syscall.SIGHUP
+					fmt.Printf("EVENT! %#v\n", event)
+				}
+			case err := <-fs.Errors:
+				fmt.Println("ERROR", err)
+			}
+		}
+	}()
+
 	for {
 		if child != nil {
 			killFork(child)
@@ -413,14 +436,14 @@ func supervise() {
 
 		cmd := createFork()
 
-		go func(cmd *exec.Cmd) {
-			if err := cmd.Wait(); err != nil { // Quit if child exits with abnormal status
-				fmt.Printf("EXITING (abnormal child exit: %v)", err)
-				os.Exit(1)
-			} else if cmd == child {
-				hup <- syscall.SIGHUP
-			}
-		}(cmd)
+		//go func(cmd *exec.Cmd) {
+		//	if err := cmd.Wait(); err != nil { // Quit if child exits with abnormal status
+		//		fmt.Printf("EXITING (abnormal child exit: %v)", err)
+		//		os.Exit(1)
+		//	} else if cmd == child {
+		//		hup <- syscall.SIGHUP
+		//	}
+		//}(cmd)
 
 		child = cmd
 
@@ -432,6 +455,7 @@ func supervise() {
 		fmt.Println("\nReloading...")
 		fmt.Println("")
 	}
+
 }
 
 /*
