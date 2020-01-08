@@ -8,3 +8,4 @@ mbtileserver
 .certs/*
 vendor/
 go.sum
+test.go
